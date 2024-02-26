@@ -1,4 +1,6 @@
 import {StatusBar} from "expo-status-bar";
+import {useEffect, useState} from "react";
+import * as Location from "expo-location";
 import {Dimensions, ScrollView, StyleSheet, Text, View} from "react-native";
 
 //화면의 크기를 얻을 수 있음
@@ -6,11 +8,32 @@ import {Dimensions, ScrollView, StyleSheet, Text, View} from "react-native";
 const {width: SCREEN_WIDTH} = Dimensions.get("window");
 
 export default function App() {
+  const [city, setCity] = useState("Loading");
+  const [location, setLocation] = useState();
+  const [ok, setOk] = useState(true);
+  const ask = async () => {
+    const {granted} = await Location.requestForegroundPermissionsAsync();
+    if (!granted) {
+      setOk(false);
+    }
+
+    const {
+      coords: {latitude, longitude},
+    } = await Location.getCurrentPositionAsync({accuracy: 5});
+    const location = await Location.reverseGeocodeAsync(
+      {latitude, longitude},
+      {useGoogleMaps: false}
+    );
+    setCity(location[0].city);
+  };
+  useEffect(() => {
+    ask();
+  });
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
       <View style={styles.city}>
-        <Text style={styles.cityName}>서울</Text>
+        <Text style={styles.cityName}>{city}</Text>
       </View>
 
       <ScrollView
@@ -20,7 +43,7 @@ export default function App() {
         horizontal
         //스크롤 상태바 스타일 수정
         //IOS에서만 가능
-        // indicatorStyle="white"
+        //indicatorStyle="white"
 
         //스크롤 상태바를 숨김
         showsHorizontalScrollIndicator={false}
